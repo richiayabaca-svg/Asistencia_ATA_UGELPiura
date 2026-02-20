@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Asistencia UGEL Piura</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+               min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { text-align: center; color: white; margin-bottom: 30px; padding: 20px; }
+        header h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .upload-section { background: white; border-radius: 20px; padding: 30px; margin-bottom: 25px; 
+                         box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; 
+                         border: 3px dashed #667eea; }
+        .upload-area { padding: 40px; border: 2px dashed #ccc; border-radius: 15px; cursor: pointer; 
+                      transition: all 0.3s; background: #f8f9fa; }
+        .upload-area:hover { border-color: #667eea; background: #f0f4ff; }
+        .file-input { display: none; }
+        .btn { padding: 12px 24px; border: none; border-radius: 10px; cursor: pointer; 
+               font-size: 1em; font-weight: 600; transition: all 0.3s; display: inline-flex; 
+               align-items: center; gap: 8px; margin: 5px; text-decoration: none; color: white; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .btn-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .btn-warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .btn-info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
+        .grid-layout { display: grid; grid-template-columns: 1fr 2fr; gap: 25px; margin-bottom: 30px; }
+        @media (max-width: 968px) { .grid-layout { grid-template-columns: 1fr; } }
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .card h2 { color: #333; margin-bottom: 20px; font-size: 1.5em; 
+                  border-bottom: 3px solid #667eea; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-weight: 600; font-size: 0.9em; }
+        input, select { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; 
+                       font-size: 1em; transition: all 0.3s; }
+        input:focus, select:focus { outline: none; border-color: #667eea; 
+                                   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .search-box { position: relative; margin-bottom: 20px; }
+        .search-box input { padding-left: 40px; font-size: 1.1em; }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #999; }
+        .suggestions { max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 10px; 
+                      margin-top: 5px; display: none; background: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1); 
+                      position: absolute; width: 100%; z-index: 100; }
+        .suggestion-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
+        .suggestion-item:hover { background: #f5f5f5; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; 
+                margin-bottom: 25px; }
+        .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; 
+                    padding: 20px; border-radius: 15px; text-align: center; }
+        .stat-number { font-size: 2em; font-weight: bold; margin-bottom: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.85em; }
+        th { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px; 
+            text-align: left; font-weight: 600; position: sticky; top: 0; }
+        td { padding: 10px; border-bottom: 1px solid #e0e0e0; }
+        tr:hover { background: #f8f9fa; }
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 0.75em; font-weight: 600; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .action-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+        .btn-small { padding: 5px 10px; font-size: 0.75em; border: none; border-radius: 6px; 
+                    cursor: pointer; }
+        .btn-edit { background: #ffc107; }
+        .btn-delete { background: #dc3545; color: white; }
+        .btn-exit { background: #6c757d; color: white; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; max-width: 700px; 
+                        width: 90%; max-height: 90vh; overflow-y: auto; }
+        .close-modal { float: right; font-size: 1.5em; cursor: pointer; color: #999; }
+        .time-display { background: #f8f9fa; padding: 10px; border-radius: 10px; text-align: center; 
+                       margin-bottom: 20px; border: 2px solid #e0e0e0; }
+        .time-display .time { font-size: 1.5em; font-weight: bold; color: #667eea; }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; 
+                padding: 15px 25px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); 
+                display: none; z-index: 2000; }
+        .toast.success { background: #28a745; }
+        .toast.error { background: #dc3545; }
+        .two-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 600px) { .two-columns { grid-template-columns: 1fr; } }
+        .hidden { display: none !important; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; }
+        .tab { padding: 10px 20px; cursor: pointer; border-bottom: 3px solid transparent; 
+              font-weight: 600; color: #666; }
+        .tab.active { color: #667eea; border-bottom-color: #667eea; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .data-loaded { background: #d4edda; color: #155724; padding: 10px; border-radius: 8px; 
+                      margin-bottom: 15px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎓 Sistema de Asistencia UGEL Piura</h1>
+            <p>I Reunión de Balance de Gestión Escolar 2025</p>
+        </header>
+
+        <div class="upload-section" id="uploadSection">
+            <h2 style="margin-bottom: 20px; color: #333;">📁 Cargar Base de Datos</h2>
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 10px; margin-bottom: 15px; 
+                        border-left: 4px solid #2196f3; text-align: left;">
+                <strong>💡 Columnas esperadas:</strong> APELLIDOS Y NOMBRES, NUMERO DE DNI, NUMERO DE CELULAR, 
+                CORREO ELECTRONICO, INSTITUCIÓN EDUCATIVA, DISTRITO, CARGO, NIVEL EDUCATIVO
+            </div>
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <div style="font-size: 3em; margin-bottom: 15px;">📊</div>
+                <h3>Arrastra tu archivo Excel aquí</h3>
+                <p>o haz clic para seleccionar</p>
+                <p style="color: #999; font-size: 0.9em; margin-top: 10px;">.xlsx, .xls, .csv</p>
+            </div>
+            <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv" 
+                   onchange="handleFileSelect(event)">
+            <div class="hidden" id="fileInfo" style="margin-top: 15px; padding: 15px; background: #e8f5e9; 
+                 border-radius: 10px; border-left: 4px solid #4caf50;">
+                <strong>✅ Archivo cargado:</strong> <span id="fileName"></span><br>
+                <small>Registros: <span id="recordCount">0</span></small>
+            </div>
+        </div>
+
+        <div class="data-loaded" id="dataLoaded">✅ Datos cargados. Puedes registrar asistencias.</div>
+
+        <div class="stats" id="statsSection" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-number" id="totalBase">0</div>
+                <div class="stat-label">En Base</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalRegistros">0</div>
+                <div class="stat-label">Registros Hoy</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="presentesAhora">0</div>
+                <div class="stat-label">Presentes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="yaSalieron">0</div>
+                <div class="stat-label">Salieron</div>
+            </div>
+        </div>
+
+        <div class="grid-layout" id="mainContent" style="display: none;">
+            <div class="card">
+                <h2>📝 Registrar Asistencia</h2>
+                <div class="time-display">
+                    <div class="time" id="currentTime">--:--:--</div>
+                    <div id="currentDate" style="color: #666; margin-top: 5px;">--/--/----</div>
+                </div>
+
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('buscar')">Buscar</div>
+                    <div class="tab" onclick="switchTab('manual')">Manual</div>
+                </div>
+
+                <div id="buscarTab" class="tab-content active">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="buscarDNI" placeholder="Buscar por DNI o Nombre..." 
+                               autocomplete="off">
+                        <div class="suggestions" id="suggestions"></div>
+                    </div>
+                </div>
+
+                <form id="formAsistencia">
+                    <div class="two-columns">
+                        <div class="form-group">
+                            <label>Hora Ingreso *</label>
+                            <input type="time" id="horaIngreso" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Hora Salida</label>
+                            <input type="time" id="horaSalida">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>APELLIDOS Y NOMBRES *</label>
+                        <input type="text" id="nombres" required>
+                    </div>
+
+                    <div class="two-columns">
+                        <div class="form-group">
+                            <label>DNI *</label>
+                            <input type="text" id="dni" maxlength="8" required>
+                        </div>
+                        <div class="form-group">
+                            <label>CELULAR</label>
+                            <input type="tel" id="celular">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>CORREO</label>
+                        <input type="email" id="email">
+                    </div>
+
+                    <div class="form-group">
+                        <label>INSTITUCIÓN *</label>
+                        <input type="text" id="institucion" required>
+                    </div>
+
+                    <div class="two-columns">
+                        <div class="form-group">
+                            <label>DISTRITO *</label>
+                            <select id="distrito" required>
+                                <option value="">Seleccione...</option>
+                                <option value="PIURA">PIURA</option>
+                                <option value="CASTILLA">CASTILLA</option>
+                                <option value="CATACAOS">CATACAOS</option>
+                                <option value="VEINTISEIS DE OCTUBRE">VEINTISEIS DE OCTUBRE</option>
+                                <option value="CURA MORI">CURA MORI</option>
+                                <option value="SM DE EL FAIQUE">SM DE EL FAIQUE</option>
+                                <option value="CANCHAQUE">CANCHAQUE</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>CARGO *</label>
+                            <select id="cargo" required>
+                                <option value="">Seleccione...</option>
+                                <option value="DIRECTOR">DIRECTOR</option>
+                                <option value="SUBDIRECTOR DE PRIMARIA">SUBDIRECTOR DE PRIMARIA</option>
+                                <option value="SUBDIRECTOR DE SECUNDARIA">SUBDIRECTOR DE SECUNDARIA</option>
+                                <option value="Subdirectora de EBA">Subdirectora de EBA</option>
+                                <option value="Directora EBA">Directora EBA</option>
+                                <option value="Docente">Docente</option>
+                                <option value="Auxiliar">Auxiliar</option>
+                                <option value="Coordinadora">Coordinadora</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>NIVEL EDUCATIVO</label>
+                        <select id="nivel">
+                            <option value="">Seleccione...</option>
+                            <option value="Inicial">Inicial</option>
+                            <option value="Primaria">Primaria</option>
+                            <option value="Secundaria">Secundaria</option>
+                            <option value="EBA">EBA</option>
+                            <option value="CEBA">CEBA</option>
+                        </select>
+                    </div>
+
+                    <input type="hidden" id="fechaRegistro">
+
+                    <button type="submit" class="btn btn-success" style="width: 100%; justify-content: center;">
+                        💾 Guardar
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="limpiarFormulario()" 
+                            style="width: 100%; margin-top: 10px;">
+                        🔄 Limpiar
+                    </button>
+                </form>
+
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e0e0e0;">
+                    <h3 style="margin-bottom: 15px;">📥 Exportar</h3>
+                    <button class="btn btn-primary" onclick="exportarExcel()" style="width: 100%; margin-bottom: 10px;">
+                        📊 Descargar Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📋 Registros del Día</h2>
+                <input type="text" id="filtroTabla" placeholder="🔍 Filtrar..." onkeyup="filtrarTabla()" 
+                       style="width: 100%; margin-bottom: 15px; padding: 8px;">
+                <div style="overflow-x: auto; max-height: 600px;">
+                    <table id="tablaAsistencia">
+                        <thead>
+                            <tr>
+                                <th>Hora Ing.</th>
+                                <th>Hora Sal.</th>
+                                <th>Nombres</th>
+                                <th>DNI</th>
+                                <th>Institución</th>
+                                <th>Distrito</th>
+                                <th>Cargo</th>
+                                <th>Estado</th>
+                                <th>Acc.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyAsistencia"></tbody>
+                    </table>
+                    <div class="empty-state" id="emptyState">
+                        <p style="margin-top: 20px; color: #999;">No hay registros</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalEditar" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="cerrarModal()">&times;</span>
+            <h2>✏️ Editar Registro</h2>
+            <form id="formEditar" style="margin-top: 20px;">
+                <input type="hidden" id="editId">
+                <div class="two-columns">
+                    <div class="form-group">
+                        <label>Hora Ingreso</label>
+                        <input type="time" id="editHoraIngreso" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Hora Salida</label>
+                        <input type="time" id="editHoraSalida">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nombres</label>
+                    <input type="text" id="editNombres" required>
+                </div>
+                <div class="two-columns">
+                    <div class="form-group">
+                        <label>DNI</label>
+                        <input type="text" id="editDni" maxlength="8" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Celular</label>
+                        <input type="tel" id="editCelular">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Correo</label>
+                    <input type="email" id="editEmail">
+                </div>
+                <div class="form-group">
+                    <label>Institución</label>
+                    <input type="text" id="editInstitucion" required>
+                </div>
+                <div class="two-columns">
+                    <div class="form-group">
+                        <label>Distrito</label>
+                        <select id="editDistrito" required>
+                            <option value="PIURA">PIURA</option>
+                            <option value="CASTILLA">CASTILLA</option>
+                            <option value="CATACAOS">CATACAOS</option>
+                            <option value="VEINTISEIS DE OCTUBRE">VEINTISEIS DE OCTUBRE</option>
+                            <option value="CURA MORI">CURA MORI</option>
+                            <option value="SM DE EL FAIQUE">SM DE EL FAIQUE</option>
+                            <option value="CANCHAQUE">CANCHAQUE</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Cargo</label>
+                        <select id="editCargo" required>
+                            <option value="DIRECTOR">DIRECTOR</option>
+                            <option value="SUBDIRECTOR DE PRIMARIA">SUBDIRECTOR DE PRIMARIA</option>
+                            <option value="SUBDIRECTOR DE SECUNDARIA">SUBDIRECTOR DE SECUNDARIA</option>
+                            <option value="Subdirectora de EBA">Subdirectora de EBA</option>
+                            <option value="Directora EBA">Directora EBA</option>
+                            <option value="Docente">Docente</option>
+                            <option value="Auxiliar">Auxiliar</option>
+                            <option value="Coordinadora">Coordinadora</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nivel</label>
+                    <select id="editNivel">
+                        <option value="">Seleccione...</option>
+                        <option value="Inicial">Inicial</option>
+                        <option value="Primaria">Primaria</option>
+                        <option value="Secundaria">Secundaria</option>
+                        <option value="EBA">EBA</option>
+                        <option value="CEBA">CEBA</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success">💾 Guardar</button>
+                <button type="button" class="btn btn-secondary" onclick="cerrarModal()">❌ Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+              let baseParticipantes = [];
+        let registrosAsistencia = [];
+        let editandoId = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            actualizarReloj();
+            setInterval(actualizarReloj, 1000);
+            document.getElementById('fechaRegistro').value = new Date().toISOString().split('T')[0];
+            
+            const dropZone = document.getElementById('dropZone');
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
+                dropZone.addEventListener(e, (ev) => { ev.preventDefault(); ev.stopPropagation(); }, false);
+            });
+            ['dragenter', 'dragover'].forEach(e => {
+                dropZone.addEventListener(e, () => dropZone.style.background = '#e8eeff', false);
+            });
+            ['dragleave', 'drop'].forEach(e => {
+                dropZone.addEventListener(e, () => dropZone.style.background = '#f8f9fa', false);
+            });
+            dropZone.addEventListener('drop', (e) => {
+                document.getElementById('fileInput').files = e.dataTransfer.files;
+                handleFileSelect({ target: { files: e.dataTransfer.files } });
+            }, false);
+        });
+
+        function actualizarReloj() {
+            const ahora = new Date();
+            document.getElementById('currentTime').textContent = ahora.toLocaleTimeString('es-PE');
+            document.getElementById('currentDate').textContent = ahora.toLocaleDateString('es-PE', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+            const hi = document.getElementById('horaIngreso');
+            if (!hi.value && document.activeElement !== hi) {
+                hi.value = ahora.toTimeString().slice(0, 5);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    procesarDatosExcel(jsonData, file.name);
+                } catch (error) {
+                    mostrarToast('❌ Error: ' + error.message, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function procesarDatosExcel(data, filename) {
+            if (data.length < 2) {
+                mostrarToast('❌ Archivo sin datos válidos', 'error');
+                return;
+            }
+            const headers = data[0].map(h => String(h).toUpperCase().trim());
+            const colMap = {
+                nombres: headers.findIndex(h => h.includes('APELLIDO') || h.includes('NOMBRE')),
+                dni: headers.findIndex(h => h.includes('DNI')),
+                celular: headers.findIndex(h => h.includes('CELULAR') || h.includes('TELEFONO')),
+                email: headers.findIndex(h => h.includes('CORREO') || h.includes('EMAIL')),
+                institucion: headers.findIndex(h => h.includes('INSTITUCION') || h.includes('IE')),
+                distrito: headers.findIndex(h => h.includes('DISTRITO')),
+                cargo: headers.findIndex(h => h.includes('CARGO')),
+                nivel: headers.findIndex(h => h.includes('NIVEL'))
+            };
+            
+            baseParticipantes = [];
+            for (let i = 1; i < data.length; i++) {
+                const row = data[i];
+                if (row.length === 0) continue;
+                const p = {
+                    nombres: colMap.nombres >= 0 ? String(row[colMap.nombres] || '').trim() : '',
+                    dni: colMap.dni >= 0 ? String(row[colMap.dni] || '').trim() : '',
+                    celular: colMap.celular >= 0 ? String(row[colMap.celular] || '').trim() : '',
+                    email: colMap.email >= 0 ? String(row[colMap.email] || '').trim() : '',
+                    institucion: colMap.institucion >= 0 ? String(row[colMap.institucion] || '').trim() : '',
+                    distrito: colMap.distrito >= 0 ? String(row[colMap.distrito] || '').trim() : '',
+                    cargo: colMap.cargo >= 0 ? String(row[colMap.cargo] || '').trim() : '',
+                    nivel: colMap.nivel >= 0 ? String(row[colMap.nivel] || '').trim() : ''
+                };
+                if (p.nombres && p.dni) baseParticipantes.push(p);
+            }
+            
+            document.getElementById('fileName').textContent = filename;
+            document.getElementById('recordCount').textContent = baseParticipantes.length;
+            document.getElementById('fileInfo').classList.remove('hidden');
+            document.getElementById('dataLoaded').style.display = 'block';
+            document.getElementById('statsSection').style.display = 'grid';
+            document.getElementById('mainContent').style.display = 'grid';
+            document.getElementById('totalBase').textContent = baseParticipantes.length;
+            mostrarToast(`✅ ${baseParticipantes.length} participantes cargados`, 'success');
+            document.getElementById('buscarDNI').focus();
+        }
+
+        const buscarInput = document.getElementById('buscarDNI');
+        const suggestions = document.getElementById('suggestions');
+
+        buscarInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            if (query.length < 2) { suggestions.style.display = 'none'; return; }
+            const resultados = baseParticipantes.filter(p => 
+                p.nombres.toLowerCase().includes(query) || p.dni.includes(query)
+            ).slice(0, 10);
+            if (resultados.length > 0) {
+                suggestions.innerHTML = resultados.map(p => `
+                    <div class="suggestion-item" onclick="seleccionarParticipante('${p.dni}')">
+                        <strong>${p.nombres}</strong><br>
+                        <small>DNI: ${p.dni} | ${p.institucion} | ${p.cargo}</small>
+                    </div>
+                `).join('');
+                suggestions.style.display = 'block';
+            } else {
+                suggestions.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-box')) suggestions.style.display = 'none';
+        });
+
+        function seleccionarParticipante(dni) {
+            const p = baseParticipantes.find(x => x.dni === dni);
+            if (p) {
+                document.getElementById('nombres').value = p.nombres;
+                document.getElementById('dni').value = p.dni;
+                document.getElementById('celular').value = p.celular;
+                document.getElementById('email').value = p.email;
+                document.getElementById('institucion').value = p.institucion;
+                document.getElementById('distrito').value = p.distrito;
+                document.getElementById('cargo').value = p.cargo;
+                document.getElementById('nivel').value = p.nivel || '';
+                suggestions.style.display = 'none';
+                buscarInput.value = '';
+                document.getElementById('horaIngreso').focus();
+                mostrarToast('✅ Datos cargados', 'success');
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            if (tab === 'buscar') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('buscarTab').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                limpiarFormulario();
+            }
+        }
+
+        document.getElementById('formAsistencia').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const registro = {
+                id: Date.now(),
+                horaIngreso: document.getElementById('horaIngreso').value,
+                horaSalida: document.getElementById('horaSalida').value,
+                nombres: document.getElementById('nombres').value.toUpperCase(),
+                dni: document.getElementById('dni').value,
+                celular: document.getElementById('celular').value,
+                email: document.getElementById('email').value,
+                institucion: document.getElementById('institucion').value.toUpperCase(),
+                distrito: document.getElementById('distrito').value,
+                cargo: document.getElementById('cargo').value,
+                nivel: document.getElementById('nivel').value,
+                fecha: document.getElementById('fechaRegistro').value
+            };
+            
+            if (editandoId) {
+                const idx = registrosAsistencia.findIndex(r => r.id === editandoId);
+                if (idx >= 0) {
+                    registrosAsistencia[idx] = { ...registro, id: editandoId };
+                    mostrarToast('✅ Actualizado', 'success');
+                }
+                editandoId = null;
+            } else {
+                const existe = registrosAsistencia.find(r => r.dni === registro.dni && r.fecha === registro.fecha);
+                if (existe) {
+                    if (confirm('⚠️ Ya existe registro hoy. ¿Actualizar?')) {
+                        const idx = registrosAsistencia.findIndex(r => r.id === existe.id);
+                        registrosAsistencia[idx] = { ...registro, id: existe.id };
+                        mostrarToast('✅ Actualizado', 'success');
+                    } else return;
+                } else {
+                    registrosAsistencia.push(registro);
+                    mostrarToast('✅ Registrado', 'success');
+                }
+            }
+            actualizarTabla();
+            limpiarFormulario();
+            actualizarEstadisticas();
+        });
+
+        function actualizarTabla() {
+            const tbody = document.getElementById('tbodyAsistencia');
+            const emptyState = document.getElementById('emptyState');
+            if (registrosAsistencia.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            emptyState.style.display = 'none';
+            const sorted = [...registrosAsistencia].sort((a, b) => 
+                new Date(`${b.fecha}T${b.horaIngreso}`) - new Date(`${a.fecha}T${a.horaIngreso}`)
+            );
+            tbody.innerHTML = sorted.map(reg => {
+                let estado = reg.horaSalida ? 'Finalizado' : 'Presente';
+                let badgeClass = reg.horaSalida ? 'badge-warning' : 'badge-success';
+                return `
+                    <tr>
+                        <td>${reg.horaIngreso}</td>
+                        <td>${reg.horaSalida || '-'}</td>
+                        <td>${reg.nombres}</td>
+                        <td>${reg.dni}</td>
+                        <td>${reg.institucion}</td>
+                        <td>${reg.distrito}</td>
+                        <td>${reg.cargo}</td>
+                        <td><span class="badge ${badgeClass}">${estado}</span></td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-small btn-edit" onclick="editarRegistro(${reg.id})">✏️</button>
+                                ${!reg.horaSalida ? `<button class="btn-small btn-exit" onclick="registrarSalida(${reg.id})">🚪</button>` : ''}
+                                <button class="btn-small btn-delete" onclick="eliminarRegistro(${reg.id})">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function editarRegistro(id) {
+            const r = registrosAsistencia.find(x => x.id === id);
+            if (!r) return;
+            editandoId = id;
+            document.getElementById('editId').value = id;
+            document.getElementById('editHoraIngreso').value = r.horaIngreso;
+            document.getElementById('editHoraSalida').value = r.horaSalida || '';
+            document.getElementById('editNombres').value = r.nombres;
+            document.getElementById('editDni').value = r.dni;
+            document.getElementById('editCelular').value = r.celular;
+            document.getElementById('editEmail').value = r.email;
+            document.getElementById('editInstitucion').value = r.institucion;
+            document.getElementById('editDistrito').value = r.distrito;
+            document.getElementById('editCargo').value = r.cargo;
+            document.getElementById('editNivel').value = r.nivel || '';
+            document.getElementById('modalEditar').style.display = 'flex';
+        }
+
+        document.getElementById('formEditar').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('editId').value);
+            const idx = registrosAsistencia.findIndex(r => r.id === id);
+            if (idx >= 0) {
+                registrosAsistencia[idx] = {
+                    ...registrosAsistencia[idx],
+                    horaIngreso: document.getElementById('editHoraIngreso').value,
+                    horaSalida: document.getElementById('editHoraSalida').value,
+                    nombres: document.getElementById('editNombres').value.toUpperCase(),
+                    dni: document.getElementById('editDni').value,
+                    celular: document.getElementById('editCelular').value,
+                    email: document.getElementById('editEmail').value,
+                    institucion: document.getElementById('editInstitucion').value.toUpperCase(),
+                    distrito: document.getElementById('editDistrito').value,
+                    cargo: document.getElementById('editCargo').value,
+                    nivel: document.getElementById('editNivel').value
+                };
+                actualizarTabla();
+                cerrarModal();
+                actualizarEstadisticas();
+                mostrarToast('✅ Guardado', 'success');
+            }
+        });
+
+        function registrarSalida(id) {
+            const r = registrosAsistencia.find(x => x.id === id);
+            if (r) {
+                r.horaSalida = new Date().toTimeString().slice(0, 5);
+                actualizarTabla();
+                actualizarEstadisticas();
+                mostrarToast('✅ Salida: ' + r.horaSalida, 'success');
+            }
+        }
+
+        function eliminarRegistro(id) {
+            if (confirm('¿Eliminar este registro?')) {
+                registrosAsistencia = registrosAsistencia.filter(r => r.id !== id);
+                actualizarTabla();
+                actualizarEstadisticas();
+                mostrarToast('🗑️ Eliminado', 'success');
+            }
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalEditar').style.display = 'none';
+            editandoId = null;
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('formAsistencia').reset();
+            document.getElementById('fechaRegistro').value = new Date().toISOString().split('T')[0];
+            editandoId = null;
+            document.getElementById('horaIngreso').value = new Date().toTimeString().slice(0, 5);
+        }
+
+        function actualizarEstadisticas() {
+            document.getElementById('totalRegistros').textContent = registrosAsistencia.length;
+            document.getElementById('presentesAhora').textContent = registrosAsistencia.filter(r => !r.horaSalida).length;
+            document.getElementById('yaSalieron').textContent = registrosAsistencia.filter(r => r.horaSalida).length;
+        }
+
+        function filtrarTabla() {
+            const filtro = document.getElementById('filtroTabla').value.toLowerCase();
+            document.querySelectorAll('#tbodyAsistencia tr').forEach(fila => {
+                fila.style.display = fila.textContent.toLowerCase().includes(filtro) ? '' : 'none';
+            });
+        }
+
+        function exportarExcel() {
+            if (registrosAsistencia.length === 0) {
+                mostrarToast('❌ No hay registros', 'error');
+                return;
+            }
+            const datos = registrosAsistencia.map(r => ({
+                'FECHA': r.fecha,
+                'HORA DE INGRESO': r.horaIngreso,
+                'HORA DE SALIDA': r.horaSalida || '',
+                'APELLIDOS Y NOMBRES': r.nombres,
+                'NUMERO DE DNI': r.dni,
+                'NUMERO DE CELULAR': r.celular,
+                'CORREO ELECTRONICO': r.email,
+                'INSTITUCION EDUCATIVA': r.institucion,
+                'DISTRITO': r.distrito,
+                'CARGO': r.cargo,
+                'NIVEL EDUCATIVO': r.nivel || ''
+            }));
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(datos);
+            ws['!cols'] = [{wch:12}, {wch:15}, {wch:15}, {wch:30}, {wch:12}, {wch:15}, {wch:25}, {wch:30}, {wch:20}, {wch:25}, {wch:15}];
+            XLSX.utils.book_append_sheet(wb, ws, 'Asistencia');
+            XLSX.writeFile(wb, `Asistencia_UGEL_Piura_${new Date().toISOString().split('T')[0]}.xlsx`);
+            mostrarToast('📊 Excel descargado', 'success');
+        }
+
+        function mostrarToast(mensaje, tipo) {
+            const toast = document.getElementById('toast');
+            toast.textContent = mensaje;
+            toast.className = 'toast ' + tipo;
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+
+        window.onclick = function(event) {
+            if (event.target === document.getElementById('modalEditar')) cerrarModal();
+        }
+    </script>
+</body>
+</html>
