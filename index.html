@@ -26,7 +26,6 @@
         .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
         .btn-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
         .btn-warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-        .btn-info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
         .grid-layout { display: grid; grid-template-columns: 1fr 2fr; gap: 25px; margin-bottom: 30px; }
         @media (max-width: 968px) { .grid-layout { grid-template-columns: 1fr; } }
@@ -52,16 +51,16 @@
         .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; 
                     padding: 20px; border-radius: 15px; text-align: center; }
         .stat-number { font-size: 2em; font-weight: bold; margin-bottom: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.85em; }
-        th { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px; 
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.8em; }
+        th { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px; 
             text-align: left; font-weight: 600; position: sticky; top: 0; }
-        td { padding: 10px; border-bottom: 1px solid #e0e0e0; }
+        td { padding: 8px; border-bottom: 1px solid #e0e0e0; }
         tr:hover { background: #f8f9fa; }
-        .badge { padding: 5px 10px; border-radius: 20px; font-size: 0.75em; font-weight: 600; }
+        .badge { padding: 4px 8px; border-radius: 20px; font-size: 0.7em; font-weight: 600; }
         .badge-success { background: #d4edda; color: #155724; }
         .badge-warning { background: #fff3cd; color: #856404; }
-        .action-btns { display: flex; gap: 5px; flex-wrap: wrap; }
-        .btn-small { padding: 5px 10px; font-size: 0.75em; border: none; border-radius: 6px; 
+        .action-btns { display: flex; gap: 3px; flex-wrap: wrap; }
+        .btn-small { padding: 4px 8px; font-size: 0.7em; border: none; border-radius: 4px; 
                     cursor: pointer; }
         .btn-edit { background: #ffc107; }
         .btn-delete { background: #dc3545; color: white; }
@@ -91,38 +90,51 @@
         .tab-content.active { display: block; }
         .data-loaded { background: #d4edda; color: #155724; padding: 10px; border-radius: 8px; 
                       margin-bottom: 15px; display: none; }
+        .debug-info { background: #fff3cd; padding: 10px; margin-top: 10px; border-radius: 5px; 
+                     font-size: 0.8em; text-align: left; max-height: 150px; overflow-y: auto; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>🎓 Sistema de Asistencia UGEL Piura</h1>
-            <p>I Reunión de Balance de Gestión Escolar 2025</p>
         </header>
 
         <div class="upload-section" id="uploadSection">
             <h2 style="margin-bottom: 20px; color: #333;">📁 Cargar Base de Datos</h2>
-            <div style="background: #e3f2fd; padding: 15px; border-radius: 10px; margin-bottom: 15px; 
-                        border-left: 4px solid #2196f3; text-align: left;">
-                <strong>💡 Columnas esperadas:</strong> APELLIDOS Y NOMBRES, NUMERO DE DNI, NUMERO DE CELULAR, 
-                CORREO ELECTRONICO, INSTITUCIÓN EDUCATIVA, DISTRITO, CARGO, NIVEL EDUCATIVO
+            
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 10px; margin-bottom: 15px; text-align: left;">
+                <strong>📋 Formato esperado:</strong>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>Columna A: APELLIDOS Y NOMBRES</li>
+                    <li>Columna B: DNI</li>
+                    <li>Columna C: CELULAR (opcional)</li>
+                    <li>Columna D: CORREO (opcional)</li>
+                    <li>Columna E: INSTITUCIÓN</li>
+                    <li>Columna F: DISTRITO</li>
+                    <li>Columna G: CARGO</li>
+                    <li>Columna H: NIVEL EDUCATIVO (opcional)</li>
+                </ul>
             </div>
+
             <div class="upload-area" onclick="document.getElementById('fileInput').click()">
                 <div style="font-size: 3em; margin-bottom: 15px;">📊</div>
                 <h3>Arrastra tu archivo Excel aquí</h3>
                 <p>o haz clic para seleccionar</p>
                 <p style="color: #999; font-size: 0.9em; margin-top: 10px;">.xlsx, .xls, .csv</p>
             </div>
-            <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv" 
-                   onchange="handleFileSelect(event)">
+            
+            <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv" onchange="handleFileSelect(event)">
+            
             <div class="hidden" id="fileInfo" style="margin-top: 15px; padding: 15px; background: #e8f5e9; 
                  border-radius: 10px; border-left: 4px solid #4caf50;">
                 <strong>✅ Archivo cargado:</strong> <span id="fileName"></span><br>
-                <small>Registros: <span id="recordCount">0</span></small>
+                <small>Registros encontrados: <span id="recordCount">0</span></small>
+                <div id="debugInfo" class="debug-info hidden"></div>
             </div>
         </div>
 
-        <div class="data-loaded" id="dataLoaded">✅ Datos cargados. Puedes registrar asistencias.</div>
+        <div class="data-loaded" id="dataLoaded">✅ Datos cargados correctamente</div>
 
         <div class="stats" id="statsSection" style="display: none;">
             <div class="stat-card">
@@ -159,8 +171,7 @@
                 <div id="buscarTab" class="tab-content active">
                     <div class="search-box">
                         <span class="search-icon">🔍</span>
-                        <input type="text" id="buscarDNI" placeholder="Buscar por DNI o Nombre..." 
-                               autocomplete="off">
+                        <input type="text" id="buscarDNI" placeholder="Buscar por DNI o Nombre..." autocomplete="off">
                         <div class="suggestions" id="suggestions"></div>
                     </div>
                 </div>
@@ -248,17 +259,16 @@
                     <input type="hidden" id="fechaRegistro">
 
                     <button type="submit" class="btn btn-success" style="width: 100%; justify-content: center;">
-                        💾 Guardar
+                        💾 Guardar Asistencia
                     </button>
-                    <button type="button" class="btn btn-secondary" onclick="limpiarFormulario()" 
-                            style="width: 100%; margin-top: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="limpiarFormulario()" style="width: 100%; margin-top: 10px;">
                         🔄 Limpiar
                     </button>
                 </form>
 
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e0e0e0;">
-                    <h3 style="margin-bottom: 15px;">📥 Exportar</h3>
-                    <button class="btn btn-primary" onclick="exportarExcel()" style="width: 100%; margin-bottom: 10px;">
+                    <h3 style="margin-bottom: 15px;">📥 Exportar Reporte</h3>
+                    <button class="btn btn-primary" onclick="exportarExcel()" style="width: 100%;">
                         📊 Descargar Excel
                     </button>
                 </div>
@@ -266,8 +276,7 @@
 
             <div class="card">
                 <h2>📋 Registros del Día</h2>
-                <input type="text" id="filtroTabla" placeholder="🔍 Filtrar..." onkeyup="filtrarTabla()" 
-                       style="width: 100%; margin-bottom: 15px; padding: 8px;">
+                <input type="text" id="filtroTabla" placeholder="🔍 Filtrar registros..." onkeyup="filtrarTabla()" style="width: 100%; margin-bottom: 15px; padding: 8px;">
                 <div style="overflow-x: auto; max-height: 600px;">
                     <table id="tablaAsistencia">
                         <thead>
@@ -279,6 +288,7 @@
                                 <th>Institución</th>
                                 <th>Distrito</th>
                                 <th>Cargo</th>
+                                <th>Nivel</th>
                                 <th>Estado</th>
                                 <th>Acc.</th>
                             </tr>
@@ -286,7 +296,7 @@
                         <tbody id="tbodyAsistencia"></tbody>
                     </table>
                     <div class="empty-state" id="emptyState">
-                        <p style="margin-top: 20px; color: #999;">No hay registros</p>
+                        <p style="margin-top: 20px;">No hay registros de asistencia</p>
                     </div>
                 </div>
             </div>
@@ -359,7 +369,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Nivel</label>
+                    <label>Nivel Educativo</label>
                     <select id="editNivel">
                         <option value="">Seleccione...</option>
                         <option value="Inicial">Inicial</option>
@@ -369,16 +379,14 @@
                         <option value="CEBA">CEBA</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-success">💾 Guardar</button>
+                <button type="submit" class="btn btn-success">💾 Guardar Cambios</button>
                 <button type="button" class="btn btn-secondary" onclick="cerrarModal()">❌ Cancelar</button>
             </form>
         </div>
     </div>
 
     <div id="toast" class="toast"></div>
-
-    <script>
-              let baseParticipantes = [];
+            let baseParticipantes = [];
         let registrosAsistencia = [];
         let editandoId = null;
 
@@ -387,21 +395,130 @@
             setInterval(actualizarReloj, 1000);
             document.getElementById('fechaRegistro').value = new Date().toISOString().split('T')[0];
             
-            const dropZone = document.getElementById('dropZone');
+            const dropZone = document.querySelector('.upload-area');
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
                 dropZone.addEventListener(e, (ev) => { ev.preventDefault(); ev.stopPropagation(); }, false);
             });
             ['dragenter', 'dragover'].forEach(e => {
-                dropZone.addEventListener(e, () => dropZone.style.background = '#e8eeff', false);
+                dropZone.addEventListener(e, () => { dropZone.style.background = '#e8eeff'; dropZone.style.borderColor = '#667eea'; }, false);
             });
             ['dragleave', 'drop'].forEach(e => {
-                dropZone.addEventListener(e, () => dropZone.style.background = '#f8f9fa', false);
+                dropZone.addEventListener(e, () => { dropZone.style.background = '#f8f9fa'; dropZone.style.borderColor = '#ccc'; }, false);
             });
             dropZone.addEventListener('drop', (e) => {
-                document.getElementById('fileInput').files = e.dataTransfer.files;
-                handleFileSelect({ target: { files: e.dataTransfer.files } });
+                handleFiles(e.dataTransfer.files);
             }, false);
         });
+
+        function handleFileSelect(e) {
+            handleFiles(e.target.files);
+        }
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            const file = files[0];
+            const validExtensions = ['.xlsx', '.xls', '.csv'];
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+            
+            if (!validExtensions.includes(fileExtension)) {
+                mostrarToast('❌ Solo archivos Excel o CSV', 'error');
+                return;
+            }
+            
+            mostrarToast('📊 Cargando...', 'success');
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    let workbook;
+                    if (fileExtension === '.csv') {
+                        workbook = XLSX.read(e.target.result, { type: 'string', codepage: 65001 });
+                    } else {
+                        workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    }
+                    
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+                    procesarDatosExcel(jsonData, file.name);
+                } catch (error) {
+                    mostrarToast('❌ Error: ' + error.message, 'error');
+                }
+            };
+            
+            if (fileExtension === '.csv') reader.readAsText(file);
+            else reader.readAsArrayBuffer(file);
+        }
+
+        function procesarDatosExcel(data, filename) {
+            if (!data || data.length === 0) {
+                mostrarToast('❌ Archivo vacío', 'error');
+                return;
+            }
+            
+            const primeraFila = data[0].map(c => String(c).trim());
+            const tieneEncabezados = primeraFila.some(c => /nombre|dni|celular|correo|institucion|distrito|cargo|nivel/i.test(c));
+            
+            let startRow = 0;
+            let headers = [];
+            
+            if (tieneEncabezados) {
+                headers = primeraFila;
+                startRow = 1;
+            } else {
+                headers = ['NOMBRES', 'DNI', 'CELULAR', 'CORREO', 'INSTITUCION', 'DISTRITO', 'CARGO', 'NIVEL'];
+            }
+            
+            baseParticipantes = [];
+            
+            for (let i = startRow; i < data.length; i++) {
+                const row = data[i];
+                if (!row || row.length === 0) continue;
+                if (row.every(cell => !cell || String(cell).trim() === '')) continue;
+                
+                const getValue = (names, defaultIdx) => {
+                    for (let name of names) {
+                        const idx = headers.findIndex(h => h.toUpperCase().includes(name.toUpperCase()));
+                        if (idx >= 0 && idx < row.length) return String(row[idx] || '').trim();
+                    }
+                    return (defaultIdx < row.length) ? String(row[defaultIdx] || '').trim() : '';
+                };
+                
+                const participante = {
+                    nombres: getValue(['NOMBRE', 'APELLIDO'], 0),
+                    dni: getValue(['DNI'], 1),
+                    celular: getValue(['CELULAR', 'TELEFONO'], 2),
+                    email: getValue(['CORREO', 'EMAIL'], 3),
+                    institucion: getValue(['INSTITUCION', 'IE'], 4),
+                    distrito: getValue(['DISTRITO'], 5),
+                    cargo: getValue(['CARGO'], 6),
+                    nivel: getValue(['NIVEL'], 7)
+                };
+                
+                if (participante.nombres && participante.dni) {
+                    baseParticipantes.push(participante);
+                }
+            }
+            
+            if (baseParticipantes.length === 0) {
+                mostrarToast('❌ No se encontraron registros válidos', 'error');
+                document.getElementById('debugInfo').classList.remove('hidden');
+                document.getElementById('debugInfo').innerHTML = '<strong>Primeras filas:</strong><br>' + 
+                    data.slice(0, 3).map((r, i) => `Fila ${i+1}: ${JSON.stringify(r)}`).join('<br>');
+                return;
+            }
+            
+            document.getElementById('fileName').textContent = filename;
+            document.getElementById('recordCount').textContent = baseParticipantes.length;
+            document.getElementById('fileInfo').classList.remove('hidden');
+            document.getElementById('dataLoaded').style.display = 'block';
+            document.getElementById('statsSection').style.display = 'grid';
+            document.getElementById('mainContent').style.display = 'grid';
+            document.getElementById('totalBase').textContent = baseParticipantes.length;
+            
+            localStorage.setItem('baseParticipantes', JSON.stringify(baseParticipantes));
+            mostrarToast(`✅ ${baseParticipantes.length} participantes cargados`, 'success');
+            setTimeout(() => document.getElementById('buscarDNI').focus(), 100);
+        }
 
         function actualizarReloj() {
             const ahora = new Date();
@@ -415,83 +532,25 @@
             }
         }
 
-        function handleFileSelect(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-                    procesarDatosExcel(jsonData, file.name);
-                } catch (error) {
-                    mostrarToast('❌ Error: ' + error.message, 'error');
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        function procesarDatosExcel(data, filename) {
-            if (data.length < 2) {
-                mostrarToast('❌ Archivo sin datos válidos', 'error');
-                return;
-            }
-            const headers = data[0].map(h => String(h).toUpperCase().trim());
-            const colMap = {
-                nombres: headers.findIndex(h => h.includes('APELLIDO') || h.includes('NOMBRE')),
-                dni: headers.findIndex(h => h.includes('DNI')),
-                celular: headers.findIndex(h => h.includes('CELULAR') || h.includes('TELEFONO')),
-                email: headers.findIndex(h => h.includes('CORREO') || h.includes('EMAIL')),
-                institucion: headers.findIndex(h => h.includes('INSTITUCION') || h.includes('IE')),
-                distrito: headers.findIndex(h => h.includes('DISTRITO')),
-                cargo: headers.findIndex(h => h.includes('CARGO')),
-                nivel: headers.findIndex(h => h.includes('NIVEL'))
-            };
-            
-            baseParticipantes = [];
-            for (let i = 1; i < data.length; i++) {
-                const row = data[i];
-                if (row.length === 0) continue;
-                const p = {
-                    nombres: colMap.nombres >= 0 ? String(row[colMap.nombres] || '').trim() : '',
-                    dni: colMap.dni >= 0 ? String(row[colMap.dni] || '').trim() : '',
-                    celular: colMap.celular >= 0 ? String(row[colMap.celular] || '').trim() : '',
-                    email: colMap.email >= 0 ? String(row[colMap.email] || '').trim() : '',
-                    institucion: colMap.institucion >= 0 ? String(row[colMap.institucion] || '').trim() : '',
-                    distrito: colMap.distrito >= 0 ? String(row[colMap.distrito] || '').trim() : '',
-                    cargo: colMap.cargo >= 0 ? String(row[colMap.cargo] || '').trim() : '',
-                    nivel: colMap.nivel >= 0 ? String(row[colMap.nivel] || '').trim() : ''
-                };
-                if (p.nombres && p.dni) baseParticipantes.push(p);
-            }
-            
-            document.getElementById('fileName').textContent = filename;
-            document.getElementById('recordCount').textContent = baseParticipantes.length;
-            document.getElementById('fileInfo').classList.remove('hidden');
-            document.getElementById('dataLoaded').style.display = 'block';
-            document.getElementById('statsSection').style.display = 'grid';
-            document.getElementById('mainContent').style.display = 'grid';
-            document.getElementById('totalBase').textContent = baseParticipantes.length;
-            mostrarToast(`✅ ${baseParticipantes.length} participantes cargados`, 'success');
-            document.getElementById('buscarDNI').focus();
-        }
-
         const buscarInput = document.getElementById('buscarDNI');
         const suggestions = document.getElementById('suggestions');
 
         buscarInput.addEventListener('input', function() {
             const query = this.value.toLowerCase().trim();
-            if (query.length < 2) { suggestions.style.display = 'none'; return; }
+            if (query.length < 2) {
+                suggestions.style.display = 'none';
+                return;
+            }
+            
             const resultados = baseParticipantes.filter(p => 
                 p.nombres.toLowerCase().includes(query) || p.dni.includes(query)
             ).slice(0, 10);
+            
             if (resultados.length > 0) {
                 suggestions.innerHTML = resultados.map(p => `
                     <div class="suggestion-item" onclick="seleccionarParticipante('${p.dni}')">
                         <strong>${p.nombres}</strong><br>
-                        <small>DNI: ${p.dni} | ${p.institucion} | ${p.cargo}</small>
+                        <small>DNI: ${p.dni} | ${p.institucion || 'Sin IE'} | ${p.cargo || 'Sin cargo'}</small>
                     </div>
                 `).join('');
                 suggestions.style.display = 'block';
@@ -509,11 +568,11 @@
             if (p) {
                 document.getElementById('nombres').value = p.nombres;
                 document.getElementById('dni').value = p.dni;
-                document.getElementById('celular').value = p.celular;
-                document.getElementById('email').value = p.email;
-                document.getElementById('institucion').value = p.institucion;
-                document.getElementById('distrito').value = p.distrito;
-                document.getElementById('cargo').value = p.cargo;
+                document.getElementById('celular').value = p.celular || '';
+                document.getElementById('email').value = p.email || '';
+                document.getElementById('institucion').value = p.institucion || '';
+                document.getElementById('distrito').value = p.distrito || '';
+                document.getElementById('cargo').value = p.cargo || '';
                 document.getElementById('nivel').value = p.nivel || '';
                 suggestions.style.display = 'none';
                 buscarInput.value = '';
@@ -536,6 +595,7 @@
 
         document.getElementById('formAsistencia').addEventListener('submit', function(e) {
             e.preventDefault();
+            
             const registro = {
                 id: Date.now(),
                 horaIngreso: document.getElementById('horaIngreso').value,
@@ -571,26 +631,33 @@
                     mostrarToast('✅ Registrado', 'success');
                 }
             }
+            
             actualizarTabla();
             limpiarFormulario();
             actualizarEstadisticas();
+            localStorage.setItem('registrosAsistencia', JSON.stringify(registrosAsistencia));
         });
 
         function actualizarTabla() {
             const tbody = document.getElementById('tbodyAsistencia');
             const emptyState = document.getElementById('emptyState');
+            
             if (registrosAsistencia.length === 0) {
                 tbody.innerHTML = '';
                 emptyState.style.display = 'block';
                 return;
             }
+            
             emptyState.style.display = 'none';
+            
             const sorted = [...registrosAsistencia].sort((a, b) => 
                 new Date(`${b.fecha}T${b.horaIngreso}`) - new Date(`${a.fecha}T${a.horaIngreso}`)
             );
+            
+            // TABLA CON COLUMNA NIVEL AGREGADA
             tbody.innerHTML = sorted.map(reg => {
-                let estado = reg.horaSalida ? 'Finalizado' : 'Presente';
-                let badgeClass = reg.horaSalida ? 'badge-warning' : 'badge-success';
+                const estado = reg.horaSalida ? 'Finalizado' : 'Presente';
+                const badgeClass = reg.horaSalida ? 'badge-warning' : 'badge-success';
                 return `
                     <tr>
                         <td>${reg.horaIngreso}</td>
@@ -600,6 +667,7 @@
                         <td>${reg.institucion}</td>
                         <td>${reg.distrito}</td>
                         <td>${reg.cargo}</td>
+                        <td>${reg.nivel || '-'}</td>
                         <td><span class="badge ${badgeClass}">${estado}</span></td>
                         <td>
                             <div class="action-btns">
@@ -653,6 +721,7 @@
                 cerrarModal();
                 actualizarEstadisticas();
                 mostrarToast('✅ Guardado', 'success');
+                localStorage.setItem('registrosAsistencia', JSON.stringify(registrosAsistencia));
             }
         });
 
@@ -663,6 +732,7 @@
                 actualizarTabla();
                 actualizarEstadisticas();
                 mostrarToast('✅ Salida: ' + r.horaSalida, 'success');
+                localStorage.setItem('registrosAsistencia', JSON.stringify(registrosAsistencia));
             }
         }
 
@@ -672,6 +742,7 @@
                 actualizarTabla();
                 actualizarEstadisticas();
                 mostrarToast('🗑️ Eliminado', 'success');
+                localStorage.setItem('registrosAsistencia', JSON.stringify(registrosAsistencia));
             }
         }
 
@@ -705,6 +776,7 @@
                 mostrarToast('❌ No hay registros', 'error');
                 return;
             }
+            
             const datos = registrosAsistencia.map(r => ({
                 'FECHA': r.fecha,
                 'HORA DE INGRESO': r.horaIngreso,
@@ -718,6 +790,7 @@
                 'CARGO': r.cargo,
                 'NIVEL EDUCATIVO': r.nivel || ''
             }));
+            
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.json_to_sheet(datos);
             ws['!cols'] = [{wch:12}, {wch:15}, {wch:15}, {wch:30}, {wch:12}, {wch:15}, {wch:25}, {wch:30}, {wch:20}, {wch:25}, {wch:15}];
@@ -737,6 +810,29 @@
         window.onclick = function(event) {
             if (event.target === document.getElementById('modalEditar')) cerrarModal();
         }
+
+        window.addEventListener('load', function() {
+            const savedBase = localStorage.getItem('baseParticipantes');
+            const savedRegistros = localStorage.getItem('registrosAsistencia');
+            
+            if (savedBase) {
+                baseParticipantes = JSON.parse(savedBase);
+                document.getElementById('totalBase').textContent = baseParticipantes.length;
+                if (baseParticipantes.length > 0) {
+                    document.getElementById('statsSection').style.display = 'grid';
+                    document.getElementById('mainContent').style.display = 'grid';
+                    document.getElementById('dataLoaded').style.display = 'block';
+                }
+            }
+            
+            if (savedRegistros) {
+                registrosAsistencia = JSON.parse(savedRegistros);
+                actualizarTabla();
+                actualizarEstadisticas();
+            }
+        });
     </script>
 </body>
 </html>
+
+    <script>
